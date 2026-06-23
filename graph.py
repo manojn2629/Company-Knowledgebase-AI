@@ -11,14 +11,10 @@ from validator import validate_answer
 from reflection import reflect_answer
 from web_search import search_web
 from memory import save_chat
-from retriever import get_vectorstore
+from agentic_router import route_query
 
 load_dotenv()
 
-# Load vectorstore
-vectorstore = get_vectorstore()
-
-# Load LLM
 llm = ChatGroq(
     model="llama-3.3-70b-versatile",
     api_key=os.getenv("GROQ_API_KEY"),
@@ -54,13 +50,32 @@ def expand(state):
     }
 
 
-# Node 3 — Hybrid Retrieve
+# Node 3 — Retrieve
 def retrieve(state):
     expanded_question = state["expanded_question"]
 
     docs = hybrid_search(
         expanded_question
     )
+
+    route = route_query(
+        state["question"],
+        docs
+    )
+
+    # No docs → web
+    if route == "web":
+        return {
+            "context": "",
+            "sources": [],
+            "confidence": 0
+        }
+
+    # Retry retrieval with original question
+    if route == "retry":
+        docs = hybrid_search(
+            state["question"]
+        )
 
     if not docs:
         return {
@@ -69,11 +84,17 @@ def retrieve(state):
             "confidence": 0
         }
 
-    # Rerank documents
     docs = rerank_documents(
         state["question"],
         docs
     )
+
+    if not docs:
+        return {
+            "context": "",
+            "sources": [],
+            "confidence": 0
+        }
 
     context = "\n\n".join([
         doc.page_content for doc in docs
@@ -91,7 +112,7 @@ def retrieve(state):
     }
 
 
-# Node 4 — Generate answer from internal docs
+# Node 4 — Generate
 def generate(state):
     question = state["question"]
     context = state["context"]
@@ -102,10 +123,9 @@ def generate(state):
         }
 
     prompt = f"""
-Answer ONLY from the internal company documents.
+Answer ONLY from the internal documents.
 
-If answer is not present,
-reply ONLY:
+If answer not found reply ONLY:
 
 NOT_FOUND
 
@@ -130,10 +150,13 @@ def validate(state):
             "validation": "INVALID"
         }
 
-    result = validate_answer(
-        state["context"],
-        state["answer"]
-    )
+    try:
+        result = validate_answer(
+            state["context"],
+            state["answer"]
+        )
+    except:
+        result = "INVALID"
 
     return {
         "validation": result
@@ -179,7 +202,6 @@ def reflect(state):
     }
 
 
-# Workflow
 workflow = StateGraph(GraphState)
 
 workflow.add_node("rewrite", rewrite)

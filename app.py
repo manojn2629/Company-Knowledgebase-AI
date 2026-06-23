@@ -4,11 +4,12 @@ import subprocess
 import sys
 from graph import app_graph
 from memory import get_chat_memory
+from image_query import extract_text_from_image
 
 
 # Page config
 st.set_page_config(
-    page_title="Knowledgebase AI",
+    page_title="Company Knowledgebase AI",
     page_icon="🤖",
     layout="wide"
 )
@@ -19,6 +20,9 @@ if "messages" not in st.session_state:
 
 if "uploaded_files" not in st.session_state:
     st.session_state.uploaded_files = []
+
+if "latest_image_text" not in st.session_state:
+    st.session_state.latest_image_text = ""
 
 
 # Sidebar
@@ -46,11 +50,11 @@ with st.sidebar:
 
     st.divider()
 
-    # Upload PDFs
+    # Upload Documents
     st.markdown("### Upload Documents")
     uploaded_files = st.file_uploader(
-        "Upload PDFs",
-        type=["pdf"],
+        "Upload Files",
+        type=["pdf", "csv", "xlsx", "png", "jpg"],
         accept_multiple_files=True
     )
 
@@ -66,9 +70,21 @@ with st.sidebar:
                 with open(file_path, "wb") as f:
                     f.write(file.read())
 
+                # OCR for uploaded images
+                if file.name.endswith(".png") or file.name.endswith(".jpg"):
+                    extracted_text = extract_text_from_image(file_path)
+
+                    txt_path = file_path + ".txt"
+
+                    with open(txt_path, "w", encoding="utf-8") as txt_file:
+                        txt_file.write(extracted_text)
+
             st.success("Files uploaded successfully.")
 
-            # Run ingest automatically
+            for file in uploaded_files:
+                st.caption(f"Uploaded: {file.name}")
+
+            # Auto ingest
             with st.spinner("Updating vector database..."):
                 process = subprocess.run(
                     [sys.executable, "ingest.py"],
@@ -83,8 +99,6 @@ with st.sidebar:
                 st.code(process.stderr)
 
             st.session_state.uploaded_files = current_files
-
-            # Force reload vectorstore
             st.rerun()
 
     st.divider()
@@ -129,7 +143,11 @@ st.markdown("""
 with st.expander("⚙ System Workflow"):
     st.markdown("""
     Query Rewrite  
-    → Internal Document Search  
+    → Query Expansion  
+    → Hybrid Retrieval  
+    → Table Extraction  
+    → OCR Extraction  
+    → Excel/CSV Search  
     → Answer Generation  
     → Validation  
     → Reflection  
@@ -186,15 +204,107 @@ for msg in st.session_state.messages:
                     """, unsafe_allow_html=True)
 
 
-# Chat input
-user_input = st.chat_input("Ask anything about company knowledge...")
+# Chat Input + Upload Icon
+col_chat, col_upload = st.columns([12, 1])
+
+with col_chat:
+    user_input = st.chat_input(
+        "Ask anything about company knowledge..."
+    )
+
+with col_upload:
+    st.markdown("""
+    <style>
+    div[data-testid="stFileUploader"] {
+        width: 40px !important;
+    }
+
+    div[data-testid="stFileUploader"] section {
+        border: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+    }
+
+    div[data-testid="stFileUploaderDropzone"] {
+        min-height: 40px !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
+    div[data-testid="stFileUploaderDropzoneInstructions"] {
+        display: none !important;
+    }
+
+    div[data-testid="stBaseButton-secondary"] {
+        display: none !important;
+    }
+
+    .upload-icon {
+        font-size: 24px;
+        cursor: pointer;
+        text-align: center;
+        margin-top: 8px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown(
+        '<div class="upload-icon">📎</div>',
+        unsafe_allow_html=True
+    )
+
+    image_file = st.file_uploader(
+        "Upload Image",
+        type=["png", "jpg", "jpeg"],
+        key="chat_image_upload",
+        label_visibility="collapsed"
+    )
 
 if suggested_question is not None:
     user_input = suggested_question
 
 
+# Process uploaded image
+if image_file:
+    os.makedirs("data", exist_ok=True)
+
+    image_path = os.path.join(
+        "data",
+        image_file.name
+    )
+
+    with open(image_path, "wb") as f:
+        f.write(image_file.read())
+
+    extracted_text = extract_text_from_image(
+        image_path
+    )
+
+    # Save latest OCR text
+    st.session_state["latest_image_text"] = extracted_text
+
+    txt_path = image_path + ".txt"
+
+    with open(txt_path, "w", encoding="utf-8") as txt_file:
+        txt_file.write(extracted_text)
+
+    with st.spinner("Indexing uploaded image..."):
+        process = subprocess.run(
+            [sys.executable, "ingest.py"],
+            capture_output=True,
+            text=True
+        )
+
+    if process.returncode == 0:
+        st.success("Image uploaded and indexed successfully.")
+    else:
+        st.error("Image indexing failed.")
+        st.code(process.stderr)
+
+
+# Main chat process
 if user_input:
-    # Save user message
     st.session_state.messages.append({
         "role": "user",
         "content": user_input
@@ -203,18 +313,26 @@ if user_input:
     with st.chat_message("user"):
         st.markdown(user_input)
 
-    # Assistant response
     with st.chat_message("assistant"):
         with st.spinner("Searching knowledgebase..."):
+
+            query_text = user_input
+
+            # Inject latest uploaded image OCR text
+            if st.session_state["latest_image_text"]:
+                query_text += (
+                    "\n\nUploaded Image Content:\n"
+                    + st.session_state["latest_image_text"]
+                )
+
             result = app_graph.invoke({
-                "question": user_input
+                "question": query_text
             })
 
         answer = result.get("answer", "No answer found.")
         sources = result.get("sources", [])
         confidence = float(result.get("confidence", 0))
 
-        # Source type
         if "Internet Search" in sources:
             st.info("🌐 Source: Internet")
         else:
@@ -222,7 +340,6 @@ if user_input:
 
         st.markdown(answer)
 
-        # Confidence
         progress_value = max(0.0, min(confidence / 100.0, 1.0))
 
         st.markdown("### Confidence Score")
@@ -236,11 +353,8 @@ if user_input:
             st.error("Low confidence")
 
         st.caption(f"{round(confidence, 2)}%")
-
-        # Source count
         st.caption(f"Retrieved {len(sources)} sources")
 
-        # Sources
         if sources:
             with st.expander("📂 View Sources"):
                 for source in sources:
@@ -256,7 +370,6 @@ if user_input:
                         </div>
                     """, unsafe_allow_html=True)
 
-        # Feedback
         st.markdown("### Feedback")
 
         col1, col2 = st.columns(2)
@@ -269,7 +382,6 @@ if user_input:
             if st.button("👎 Not Helpful"):
                 st.warning("Feedback noted.")
 
-    # Save assistant response
     st.session_state.messages.append({
         "role": "assistant",
         "content": answer,
