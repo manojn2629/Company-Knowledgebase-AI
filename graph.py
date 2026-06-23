@@ -123,11 +123,20 @@ def generate(state):
         }
 
     prompt = f"""
-Answer ONLY from the internal documents.
+You are answering from structured company records.
 
-If answer not found reply ONLY:
+The context may contain:
+- PDF text
+- Tables
+- CSV rows
+- Excel rows
+- OCR text
 
-NOT_FOUND
+Rules:
+1. Extract exact values from rows.
+2. If employee data exists, answer directly.
+3. Do NOT say "I don't know" if data exists.
+4. If not found, reply ONLY: NOT_FOUND
 
 Context:
 {context}
@@ -187,8 +196,8 @@ def web_fallback(state):
 # Node 7 — Reflection
 def reflect(state):
     improved_answer = reflect_answer(
-        state["answer"]
-    )
+    state["question"] + "\n" + state["answer"]
+)
 
     save_chat(
         state["question"],

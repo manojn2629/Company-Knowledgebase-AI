@@ -11,7 +11,7 @@ bm25 = BM25Okapi(tokenized_docs)
 
 
 def hybrid_search(query):
-    faiss_docs = vectorstore.similarity_search(query, k=5)
+    faiss_docs = vectorstore.similarity_search(query, k=20)
 
     bm25_docs = bm25.get_top_n(
         query.split(),
