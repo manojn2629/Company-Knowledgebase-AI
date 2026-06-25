@@ -1,5 +1,6 @@
 from PIL import Image
 import pytesseract
+from pdf2image import convert_from_path
 
 # Windows Tesseract path
 pytesseract.pytesseract.tesseract_cmd = (
@@ -7,13 +8,28 @@ pytesseract.pytesseract.tesseract_cmd = (
 )
 
 
-def extract_ocr_text(image_path):
+def extract_ocr_text(file_path):
     try:
-        image = Image.open(image_path)
+        text = ""
 
-        text = pytesseract.image_to_string(
-            image
-        )
+        # If PDF → convert pages to images
+        if file_path.endswith(".pdf"):
+            pages = convert_from_path(file_path)
+
+            for page in pages:
+                text += pytesseract.image_to_string(
+                    page
+                )
+
+        # If image file
+        elif file_path.endswith(
+            (".png", ".jpg", ".jpeg")
+        ):
+            image = Image.open(file_path)
+
+            text = pytesseract.image_to_string(
+                image
+            )
 
         return text.strip()
 

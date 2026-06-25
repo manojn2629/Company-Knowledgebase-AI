@@ -1,26 +1,36 @@
 from rank_bm25 import BM25Okapi
 from retriever import get_vectorstore
 
-vectorstore = get_vectorstore()
 
-all_docs = vectorstore.similarity_search("", k=50)
+def hybrid_search(query, filter_type=None):
+    vectorstore = get_vectorstore()
 
-tokenized_docs = [doc.page_content.split() for doc in all_docs]
+    kwargs = {"k": 10, "fetch_k": 100}
+    if filter_type:
+        kwargs["filter"] = {"type": filter_type}
 
-bm25 = BM25Okapi(tokenized_docs)
+    faiss_docs = vectorstore.similarity_search(
+        query,
+        **kwargs
+    )
 
+    if not faiss_docs:
+        return []
 
-def hybrid_search(query):
-    faiss_docs = vectorstore.similarity_search(query, k=20)
+    tokenized_docs = [
+        doc.page_content.split()
+        for doc in faiss_docs
+    ]
+
+    bm25 = BM25Okapi(tokenized_docs)
 
     bm25_docs = bm25.get_top_n(
         query.split(),
-        all_docs,
+        faiss_docs,
         n=5
     )
 
     merged_docs = []
-
     seen = set()
 
     for doc in faiss_docs + bm25_docs:

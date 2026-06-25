@@ -5,3 +5,4 @@ vectorstore/
 *.pyc
 *.pkl
 *.faiss
+auth.db
