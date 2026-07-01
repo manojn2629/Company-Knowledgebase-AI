@@ -11,8 +11,8 @@ function Hero() {
 
                 <h1 className="text-6xl font-bold leading-tight">
                     <span className="text-white">RAG</span>{" "}
-                    <span className="text-purple-500">Intelligence</span>{" "}
-                    <span className="text-cyan-400">System</span>
+                    <span className="text-white">Intelligence</span>{" "}
+                    <span className="text-gray-300">System</span>
                 </h1>
 
                 <p className="text-gray-400 text-xl leading-relaxed max-w-xl">
@@ -24,7 +24,7 @@ function Hero() {
                 <div>
                     <button
                         onClick={() => navigate("/login")}
-                        className="px-8 py-4 bg-purple-600 rounded-xl hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] transition-all duration-300 text-lg font-medium"
+                        className="px-8 py-4 bg-white text-black rounded-xl hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 text-lg font-medium"
                     >
                         Get Started
                     </button>
@@ -36,13 +36,13 @@ function Hero() {
                 <div className="relative flex items-center justify-center">
 
                     {/* Outer Ring */}
-                    <div className="absolute w-80 h-80 rounded-full border border-purple-500 animate-[spin_12s_linear_infinite]"></div>
+                    <div className="absolute w-80 h-80 rounded-full border border-white animate-[spin_12s_linear_infinite]"></div>
 
                     {/* Inner Ring */}
-                    <div className="absolute w-64 h-64 rounded-full border border-cyan-500 animate-[spin_8s_linear_infinite_reverse]"></div>
+                    <div className="absolute w-64 h-64 rounded-full border border-gray-400 animate-[spin_8s_linear_infinite_reverse]"></div>
 
                     {/* Core */}
-                    <div className="w-40 h-40 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 blur-2xl opacity-80"></div>
+                    <div className="w-40 h-40 rounded-full bg-gradient-to-r from-white to-gray-500 blur-2xl opacity-80"></div>
 
                 </div>
             </div>

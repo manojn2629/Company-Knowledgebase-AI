@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { uploadDocument, fetchSessions } from "../../services/api";
-function Sidebar({ onFileUpload, onSessionSelect, onNewSession, refreshTrigger }) {
+function Sidebar({ onFileUpload, onSessionSelect, onNewSession, refreshTrigger, onExportChat }) {
     const [selectedFile, setSelectedFile] = useState(null);
     const [sessions, setSessions] = useState([]);
+    const [isDragging, setIsDragging] = useState(false);
 
     useEffect(() => {
         const email = localStorage.getItem("userEmail");
@@ -16,16 +17,32 @@ function Sidebar({ onFileUpload, onSessionSelect, onNewSession, refreshTrigger }
     }, [refreshTrigger]);
 
     const handleFileUpload = async (e) => {
-        const file = e.target.files[0];
+        const file = e.target.files?.[0] || e.dataTransfer?.files?.[0];
 
         if (file) {
             setSelectedFile(file.name);
-
             const result = await uploadDocument(file);
-
             console.log(result);
-
             onFileUpload(file.name);
+        }
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleFileUpload(e);
+            e.dataTransfer.clearData();
         }
     };
 
@@ -38,8 +55,16 @@ function Sidebar({ onFileUpload, onSessionSelect, onNewSession, refreshTrigger }
 
             {/* Upload */}
             <div className="mb-6">
-                <label className="w-full p-4 rounded-xl bg-white/5 border border-white/10 cursor-pointer block text-center hover:border-purple-500 transition-all duration-300">
-                    Upload Files
+                <label 
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`w-full p-8 rounded-xl border-2 border-dashed cursor-pointer block text-center transition-all duration-300 ${
+                        isDragging ? "border-white bg-white/20" : "bg-white/5 border-white/10 hover:border-white"
+                    }`}>
+                    <div className="text-gray-300 text-sm">
+                        {isDragging ? "Drop here..." : "Drag & Drop or Click to Upload"}
+                    </div>
 
                     <input
                         type="file"
@@ -49,7 +74,7 @@ function Sidebar({ onFileUpload, onSessionSelect, onNewSession, refreshTrigger }
                 </label>
 
                 {selectedFile && (
-                    <div className="mt-4 p-3 rounded-xl bg-black border border-white/10 text-sm text-purple-400">
+                    <div className="mt-4 p-3 rounded-xl bg-black border border-white/10 text-sm text-gray-300">
                         {selectedFile}
                     </div>
                 )}
@@ -59,15 +84,15 @@ function Sidebar({ onFileUpload, onSessionSelect, onNewSession, refreshTrigger }
             <div className="space-y-4">
                 <button 
                     onClick={onNewSession}
-                    className="w-full p-4 rounded-xl bg-purple-600 border border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all duration-300">
+                    className="w-full p-4 rounded-xl bg-white text-black border border-white hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300">
                     + New Chat
                 </button>
 
-                <button className="w-full p-4 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500 transition-all duration-300">
+                <button className="w-full p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white transition-all duration-300">
                     Quick Prompts
                 </button>
 
-                <button className="w-full p-4 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500 transition-all duration-300">
+                <button onClick={onExportChat} className="w-full p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white transition-all duration-300">
                     Export Chat
                 </button>
             </div>
@@ -83,7 +108,7 @@ function Sidebar({ onFileUpload, onSessionSelect, onNewSession, refreshTrigger }
                         <div 
                             key={s.id} 
                             onClick={() => onSessionSelect(s.id)}
-                            className="p-3 rounded-xl bg-black border border-white/10 text-sm cursor-pointer hover:border-purple-500 transition-all"
+                            className="p-3 rounded-xl bg-black border border-white/10 text-sm cursor-pointer hover:border-white transition-all"
                         >
                             {s.title}
                         </div>

@@ -19,13 +19,13 @@ function RightPanel({ details }) {
             return details.sources.map((source, index) => (
                 <div
                     key={index}
-                    className="p-4 rounded-xl bg-black border border-white/10 hover:border-purple-500 transition-all duration-300"
+                    className="p-4 rounded-xl bg-black border border-white/10 hover:border-white transition-all duration-300"
                 >
                     <p className="text-sm font-medium">
                         {source}
                     </p>
                     {details.confidence !== undefined && (
-                        <p className="text-xs text-purple-400 mt-2">
+                        <p className="text-xs text-gray-300 mt-2">
                             Confidence: {details.confidence}%
                         </p>
                     )}
@@ -36,12 +36,12 @@ function RightPanel({ details }) {
         return fallbackSources.map((source, index) => (
             <div
                 key={index}
-                className="p-4 rounded-xl bg-black border border-white/10 hover:border-purple-500 transition-all duration-300"
+                className="p-4 rounded-xl bg-black border border-white/10 hover:border-white transition-all duration-300"
             >
                 <p className="text-sm font-medium">
                     {source.title}
                 </p>
-                <p className="text-xs text-purple-400 mt-2">
+                <p className="text-xs text-gray-300 mt-2">
                     Confidence: {source.confidence}
                 </p>
             </div>
@@ -63,15 +63,15 @@ function RightPanel({ details }) {
                     </h3>
                     <div className="space-y-3">
                         <div className="p-3 rounded-lg bg-black border border-white/10">
-                            <p className="text-xs text-purple-400 mb-1">Original Query</p>
+                            <p className="text-xs text-gray-300 mb-1">Original Query</p>
                             <p className="text-sm">{details.original || "N/A"}</p>
                         </div>
                         <div className="p-3 rounded-lg bg-black border border-white/10">
-                            <p className="text-xs text-purple-400 mb-1">Rewritten Query</p>
+                            <p className="text-xs text-gray-300 mb-1">Rewritten Query</p>
                             <p className="text-sm">{details.rewritten || "N/A"}</p>
                         </div>
                         <div className="p-3 rounded-lg bg-black border border-white/10 break-words">
-                            <p className="text-xs text-purple-400 mb-1">Expanded Query</p>
+                            <p className="text-xs text-gray-300 mb-1">Expanded Query</p>
                             <p className="text-sm leading-relaxed">{details.expanded || "N/A"}</p>
                         </div>
                     </div>

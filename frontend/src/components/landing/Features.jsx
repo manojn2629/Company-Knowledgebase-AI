@@ -103,9 +103,9 @@ function Features() {
                     <div
                         key={index}
                         onClick={() => handleCardClick(index)}
-                        className="p-8 bg-white/5 border border-white/10 rounded-3xl cursor-pointer hover:border-purple-500 transition-all duration-300"
+                        className="p-8 bg-white/5 border border-white/10 rounded-3xl cursor-pointer hover:border-white transition-all duration-300"
                     >
-                        <div className="text-purple-400 mb-6">
+                        <div className="text-gray-300 mb-6">
                             {feature.icon}
                         </div>
 
@@ -119,7 +119,7 @@ function Features() {
 
                         {openCard === index && (
                             <div className="mt-4 border-t border-white/10 pt-4">
-                                <h4 className="text-purple-400 mb-3 font-semibold">
+                                <h4 className="text-gray-300 mb-3 font-semibold">
                                     Working Flow:
                                 </h4>
 

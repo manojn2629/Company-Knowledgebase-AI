@@ -10,28 +10,28 @@ function Navbar() {
             <div className="flex gap-8 text-gray-300 text-lg">
                 <a
                     href="#features"
-                    className="hover:text-purple-400 cursor-pointer transition-all duration-300"
+                    className="hover:text-gray-300 cursor-pointer transition-all duration-300"
                 >
                     Features
                 </a>
 
                 <a
                     href="#workflow"
-                    className="hover:text-purple-400 cursor-pointer transition-all duration-300"
+                    className="hover:text-gray-300 cursor-pointer transition-all duration-300"
                 >
                     Workflow
                 </a>
 
                 <a
                     href="#preview"
-                    className="hover:text-purple-400 cursor-pointer transition-all duration-300"
+                    className="hover:text-gray-300 cursor-pointer transition-all duration-300"
                 >
                     Preview
                 </a>
 
                 <Link
                     to="/login"
-                    className="hover:text-purple-400 cursor-pointer transition-all duration-300"
+                    className="hover:text-gray-300 cursor-pointer transition-all duration-300"
                 >
                     Login
                 </Link>

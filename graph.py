@@ -1,20 +1,12 @@
-from typing import TypedDict, List
-from langgraph.graph import StateGraph, END
+from langgraph.prebuilt import create_react_agent
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 import os
 
-from query_expander import expand_query
-from hybrid_retriever import hybrid_search
-from reranker import rerank_documents
-from validator import validate_answer
-from reflection import reflect_answer
-from web_search import search_web
+from tools import agent_tools
 from memory import save_chat
-from agentic_router import route_query
 
 load_dotenv()
-
 
 # Load LLM
 llm = ChatGroq(
@@ -23,304 +15,65 @@ llm = ChatGroq(
     temperature=0
 )
 
-
-# Graph State
-class GraphState(TypedDict, total=False):
-    question: str
-    rewritten_question: str
-    expanded_question: str
-    context: str
-    answer: str
-    sources: List[str]
-    confidence: float
-    validation: str
-
-
-# Step 1: Rewrite Query
-def rewrite(state):
-    prompt = f"""
-Rewrite the user query for better retrieval.
+# System Prompt
+system_prompt = """
+You are an intelligent internal company knowledge assistant.
+Your goal is to answer user queries accurately, clearly, and concisely.
+You have access to a set of tools. ALWAYS use your tools when you need to lookup information.
 
 Rules:
-1. Keep original meaning.
-2. Make it clear and searchable.
-3. Expand abbreviations.
-4. Keep important names, IDs, and values.
-5. Return only rewritten query.
-
-User Query:
-{state["question"]}
+1. ALWAYS use the `search_knowledgebase` tool FIRST when asked about company policies, internal data, or documentation.
+2. If the answer is not in the knowledgebase, you may use the `web_search_tool` to find external information.
+3. OUTPUT FORMAT: Be clear and ALWAYS format your output using bullet points.
+4. CITATIONS: ALWAYS include citations for the sources you used directly in your text (e.g., "[Source: DocumentName.pdf]").
+5. If you cannot find the answer anywhere, clearly state that you do not know.
+6. Do NOT guess or make up tool names. ONLY use the tools exactly as provided to you.
 """
 
-    response = llm.invoke(prompt)
-
-    rewritten_query = response.content.strip()
-
-    print("\nOriginal Query:", state["question"])
-    print("Rewritten Query:", rewritten_query)
-
-    return {
-        "question": state["question"],
-        "rewritten_question": rewritten_query
-    }
-
-
-# Step 2: Expand Query
-def expand(state):
-    expanded = expand_query(
-        state["rewritten_question"]
-    )
-
-    print("\nExpanded Query:", expanded)
-
-    return {
-        "expanded_question": expanded
-    }
-
-
-# Step 3: Retrieve Documents
-def retrieve(state):
-    if "image" in state["question"].lower():
-        docs = hybrid_search(
-            state["expanded_question"],
-            filter_type="ocr_image"
-        )
-    else:
-        docs = hybrid_search(
-            state["expanded_question"]
-        )
-
-    print("\nQuestion:", state["question"])
-    print("Retrieved Docs:", len(docs))
-
-    route = route_query(
-        state["question"],
-        docs
-    )
-
-    print("Route Decision:", route)
-
-    if route == "web":
-        return {
-            "context": "",
-            "sources": [],
-            "confidence": 0
-        }
-
-    if route == "retry":
-        if "image" in state["question"].lower():
-            docs = hybrid_search(
-                state["rewritten_question"],
-                filter_type="ocr_image"
-            )
-        else:
-            docs = hybrid_search(
-                state["rewritten_question"]
-            )
-
-        print("Retry Docs:", len(docs))
-
-    if not docs:
-        return {
-            "context": "",
-            "sources": [],
-            "confidence": 0
-        }
-
-    docs = rerank_documents(
-        state["question"],
-        docs
-    )
-
-    print("Reranked Docs:", len(docs))
-
-    if not docs:
-        return {
-            "context": "",
-            "sources": [],
-            "confidence": 0
-        }
-
-    context = "\n\n".join([
-        doc.page_content for doc in docs
-    ])
-
-    sources = []
-
-    for doc in docs:
-        source = doc.metadata.get(
-            "source",
-            "Unknown"
-        )
-
-        page = doc.metadata.get(
-            "page",
-            "N/A"
-        )
-
-        source_text = f"{source} | Page {page}"
-
-        if source_text not in sources:
-            sources.append(source_text)
-
-    confidence = min(
-        len(docs) * 20,
-        100
-    )
-
-    return {
-        "context": context,
-        "sources": sources,
-        "confidence": confidence
-    }
-
-
-# Step 4: Generate Answer
-def generate(state):
-    if not state.get("context"):
-        return {
-            "answer": "NOT_FOUND"
-        }
-
-    prompt = f"""
-You are an internal company knowledge assistant.
-
-STRICT RULES:
-1. Answer ONLY from context.
-2. Never use outside knowledge.
-3. Be short and precise.
-4. Use bullet points.
-5. Mention exact values.
-6. Add source citations.
-7. If answer not found, return ONLY NOT_FOUND.
-
-Context:
-{state["context"]}
-
-Question:
-{state["question"]}
-"""
-
-    response = llm.invoke(prompt)
-
-    answer = response.content.strip()
-
-    print("\nGenerated Answer:", answer)
-
-    return {
-        "answer": answer
-    }
-
-
-# Step 5: Validate Answer
-def validate(state):
-    if state["answer"] == "NOT_FOUND":
-        return {
-            "validation": "INVALID"
-        }
-
-    try:
-        result = validate_answer(
-            state["context"],
-            state["answer"]
-        )
-
-        print("Validation:", result)
-
-        # Safety fallback
-        if result not in ["VALID", "INVALID"]:
-            result = "VALID"
-
-    except Exception as e:
-        print("Validation Error:", e)
-        result = "VALID"
-
-    return {
-        "validation": result
-    }
-
-# Decide next node
-def decide_next(state):
-    # Only go to web if NO answer found
-    if state["answer"] == "NOT_FOUND":
-        return "web_search"
-
-    return "reflect"
-
-
-# Step 6: Web Search Fallback
-def web_fallback(state):
-    print("\nUsing Web Fallback")
-
-    web_answer = search_web(
-        state["question"]
-    )
-
-    return {
-        "answer": web_answer,
-        "sources": ["Internet Search"],
-        "confidence": 100
-    }
-
-
-# Step 7: Reflection
-def reflect(state):
-    improved_answer = reflect_answer(
-        state["question"] + "\n" + state["answer"]
-    )
-
-    save_chat(
-        state["question"],
-        improved_answer
-    )
-
-    print("\nFinal Answer:", improved_answer)
-
-    return {
-        "answer": improved_answer,
-        "sources": state["sources"],
-        "confidence": state["confidence"]
-    }
-
-
-# Build Workflow
-workflow = StateGraph(GraphState)
-
-workflow.add_node("rewrite", rewrite)
-workflow.add_node("expand", expand)
-workflow.add_node("retrieve", retrieve)
-workflow.add_node("generate", generate)
-workflow.add_node("validate", validate)
-workflow.add_node("web_search", web_fallback)
-workflow.add_node("reflect", reflect)
-
-workflow.set_entry_point("rewrite")
-
-workflow.add_edge("rewrite", "expand")
-workflow.add_edge("expand", "retrieve")
-workflow.add_edge("retrieve", "generate")
-workflow.add_edge("generate", "validate")
-
-workflow.add_conditional_edges(
-    "validate",
-    decide_next,
-    {
-        "web_search": "web_search",
-        "reflect": "reflect"
-    }
-)
-
-workflow.add_edge("web_search", END)
-workflow.add_edge("reflect", END)
-
-# Compile Graph
-app_graph = workflow.compile()
-
+# Compile the ReAct Agent Graph
+app_graph = create_react_agent(llm, tools=agent_tools, prompt=system_prompt)
 
 # Runner
 def run_graph(question):
-    result = app_graph.invoke({
-        "question": question
-    })
+    # Run the agent
+    result = app_graph.invoke({"messages": [("user", question)]})
+    
+    # Extract the final answer
+    messages = result.get("messages", [])
+    final_message = messages[-1].content if messages else "No response generated."
+    
+    # Extract tool usage for sources
+    sources = []
+    for msg in messages:
+        if msg.type == "tool":
+            sources.append(f"Tool Invoked: {msg.name}")
+    
+    # De-duplicate sources
+    sources = list(set(sources))
+    
+    # Save the chat to memory (optional, maintaining original behavior)
+    save_chat(question, final_message)
+    
+    # Return formatted result matching old contract for app.py
+    return {
+        "answer": final_message,
+        "sources": sources,
+        "confidence": 100 if final_message else 0,
+        "question": question,
+        "rewritten_question": "",
+        "expanded_question": ""
+    }
 
-    return result
+def run_graph_stream(question):
+    content_length = 0
+    try:
+        for msg, metadata in app_graph.stream({"messages": [("user", question)]}, stream_mode="messages"):
+            msg_type = getattr(msg, "type", "")
+            node_name = metadata.get("langgraph_node", "")
+            if msg.content and node_name == "agent" and (msg_type == "ai" or msg_type == "AIMessageChunk" or "AIMessage" in str(type(msg))):
+                # The agent might yield tool calls as well, we only want the text content
+                content_length += len(msg.content)
+                yield msg.content
+    except Exception as e:
+        if content_length < 10:
+            yield f"\n\n[Error from AI Provider: {str(e)}]"

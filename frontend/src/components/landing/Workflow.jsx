@@ -26,11 +26,11 @@ function Workflow() {
                             {/* Step Card */}
                             <div className="relative group">
 
-                                <div className="absolute inset-0 bg-purple-500 blur-xl opacity-20 group-hover:opacity-40 transition-all duration-500 rounded-3xl"></div>
+                                <div className="absolute inset-0 bg-white blur-xl opacity-20 group-hover:opacity-40 transition-all duration-500 rounded-3xl"></div>
 
-                                <div className="relative w-44 h-32 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl flex flex-col items-center justify-center hover:border-purple-500 transition-all duration-500 hover:scale-105">
+                                <div className="relative w-44 h-32 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl flex flex-col items-center justify-center hover:border-white transition-all duration-500 hover:scale-105">
 
-                                    <div className="text-sm text-purple-400 mb-2">
+                                    <div className="text-sm text-gray-300 mb-2">
                                         STEP {index + 1}
                                     </div>
 
@@ -43,7 +43,7 @@ function Workflow() {
 
                             {/* Connector */}
                             {index !== steps.length - 1 && (
-                                <div className="w-20 h-[3px] bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full"></div>
+                                <div className="w-20 h-[3px] bg-gradient-to-r from-white to-gray-500 rounded-full"></div>
                             )}
                         </div>
                     ))}
@@ -54,7 +54,7 @@ function Workflow() {
 
             {/* Workflow Description */}
             <div className="mt-14 p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
-                <h3 className="text-2xl font-semibold mb-4 text-purple-400">
+                <h3 className="text-2xl font-semibold mb-4 text-gray-300">
                     How It Works
                 </h3>
 

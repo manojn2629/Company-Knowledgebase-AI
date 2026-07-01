@@ -8,12 +8,12 @@ function Preview() {
                 {/* LEFT PANEL */}
                 <div className="w-[22%] h-full rounded-3xl bg-black/40 border border-white/10 p-6 flex flex-col">
 
-                    <button className="w-full py-4 rounded-2xl bg-purple-600 hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all duration-300">
+                    <button className="w-full py-4 rounded-2xl bg-white text-black hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300">
                         Upload Files
                     </button>
 
                     <div className="mt-8">
-                        <h3 className="text-lg font-semibold mb-4 text-purple-400">
+                        <h3 className="text-lg font-semibold mb-4 text-gray-300">
                             Knowledge Base
                         </h3>
 
@@ -33,7 +33,7 @@ function Preview() {
                     </div>
 
                     <div className="mt-10">
-                        <h3 className="text-lg font-semibold mb-4 text-cyan-400">
+                        <h3 className="text-lg font-semibold mb-4 text-gray-300">
                             Recent Chats
                         </h3>
 
@@ -60,7 +60,7 @@ function Preview() {
 
                         {/* User */}
                         <div className="flex justify-end">
-                            <div className="px-5 py-4 rounded-2xl bg-purple-600 max-w-md">
+                            <div className="px-5 py-4 rounded-2xl bg-white text-black max-w-md">
                                 What is the leave policy?
                             </div>
                         </div>
@@ -76,11 +76,11 @@ function Preview() {
                         <div className="space-y-3 mt-6">
                             <h4 className="text-sm text-gray-400">Retrieved Sources</h4>
 
-                            <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/30">
+                            <div className="p-3 rounded-xl bg-white/10 border border-white/30">
                                 Employee Handbook.pdf
                             </div>
 
-                            <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
+                            <div className="p-3 rounded-xl bg-gray-400/10 border border-gray-400/30">
                                 HR Policy.pdf
                             </div>
                         </div>
@@ -93,7 +93,7 @@ function Preview() {
                             Ask your company AI...
                         </span>
 
-                        <button className="px-6 py-2 rounded-xl bg-purple-600">
+                        <button className="px-6 py-2 rounded-xl bg-white text-black">
                             Send
                         </button>
                     </div>
@@ -111,19 +111,19 @@ function Preview() {
 
                         <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
                             Confidence Score
-                            <div className="mt-3 h-2 rounded-full bg-purple-600 w-[96%]"></div>
+                            <div className="mt-3 h-2 rounded-full bg-white text-black w-[96%]"></div>
                             <p className="mt-2 text-sm text-gray-400">96%</p>
                         </div>
 
                         <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
                             Retrieval Latency
-                            <div className="mt-3 h-2 rounded-full bg-cyan-500 w-[70%]"></div>
+                            <div className="mt-3 h-2 rounded-full bg-gray-400 w-[70%]"></div>
                             <p className="mt-2 text-sm text-gray-400">1.2 sec</p>
                         </div>
 
                         <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
                             Token Usage
-                            <p className="mt-2 text-purple-400">842 tokens</p>
+                            <p className="mt-2 text-gray-300">842 tokens</p>
                         </div>
 
                         <div className="p-4 rounded-2xl bg-white/5 border border-white/10">

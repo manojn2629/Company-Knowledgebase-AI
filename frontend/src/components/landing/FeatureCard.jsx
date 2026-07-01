@@ -6,9 +6,9 @@ function FeatureCard({ title, description, steps, icon }) {
     return (
         <div
             onClick={() => setOpen(!open)}
-            className="p-8 rounded-3xl bg-white/5 border border-white/10 cursor-pointer hover:border-purple-500 transition-all duration-300"
+            className="p-8 rounded-3xl bg-white/5 border border-white/10 cursor-pointer hover:border-white transition-all duration-300"
         >
-            <div className="text-purple-400 text-4xl mb-6">
+            <div className="text-gray-300 text-4xl mb-6">
                 {icon}
             </div>
 

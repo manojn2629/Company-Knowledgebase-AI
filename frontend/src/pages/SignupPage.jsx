@@ -19,7 +19,8 @@ function SignupPage() {
         const res = await signup(email, password);
         if (res?.status === "success") {
             localStorage.setItem("userEmail", email);
-            navigate("/login");
+            localStorage.setItem("userRole", res.role);
+            navigate("/dashboard");
         } else {
             setError(res?.message || "Signup failed");
         }
@@ -35,19 +36,19 @@ function SignupPage() {
             {/* LEFT SIDE */}
             <div className="w-1/2 flex flex-col justify-center px-20 relative">
 
-                <div className="absolute w-[500px] h-[500px] bg-purple-500 blur-[180px] opacity-20 rounded-full"></div>
+                <div className="absolute w-[500px] h-[500px] bg-white blur-[180px] opacity-10 rounded-full"></div>
 
-                <div className="relative flex justify-center items-center mb-12">
-                    <div className="absolute w-72 h-72 rounded-full border border-purple-500 animate-[spin_15s_linear_infinite]"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex justify-center items-center pointer-events-none -z-10">
+                    <div className="absolute w-[400px] h-[400px] rounded-full border border-white/30 animate-[spin_15s_linear_infinite]"></div>
 
-                    <div className="absolute w-56 h-56 rounded-full border border-cyan-500 animate-[spin_10s_linear_infinite_reverse]"></div>
+                    <div className="absolute w-[300px] h-[300px] rounded-full border border-gray-500/30 animate-[spin_10s_linear_infinite_reverse]"></div>
 
-                    <div className="w-32 h-32 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 blur-2xl opacity-80"></div>
+                    <div className="w-48 h-48 rounded-full bg-white blur-[100px] opacity-30"></div>
                 </div>
 
                 <h1 className="text-5xl font-bold leading-tight mb-6">
                     Secure Access to Your
-                    <span className="text-purple-500"> RAG Intelligence</span>
+                    <span className="text-white"> RAG Intelligence</span>
                 </h1>
 
                 <p className="text-gray-400 text-lg max-w-lg">
@@ -56,15 +57,15 @@ function SignupPage() {
                 </p>
 
                 <div className="mt-10 flex gap-4">
-                    <div className="px-4 py-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
+                    <div className="px-4 py-2 rounded-xl bg-white/10 border border-white/30 text-gray-300">
                         FAISS
                     </div>
 
-                    <div className="px-4 py-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                    <div className="px-4 py-2 rounded-xl bg-gray-400/10 border border-gray-400/30 text-gray-300">
                         OCR
                     </div>
 
-                    <div className="px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400">
+                    <div className="px-4 py-2 rounded-xl bg-white/10 border border-white/30 text-gray-300">
                         Memory
                     </div>
                 </div>
@@ -87,7 +88,7 @@ function SignupPage() {
                             placeholder="Enter email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full p-4 rounded-xl bg-black/40 border border-white/10 outline-none focus:border-purple-500"
+                            className="w-full p-4 rounded-xl bg-black/40 border border-white/10 outline-none focus:border-white"
                         />
 
                         <input
@@ -95,14 +96,14 @@ function SignupPage() {
                             placeholder="Enter password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full p-4 rounded-xl bg-black/40 border border-white/10 outline-none focus:border-purple-500"
+                            className="w-full p-4 rounded-xl bg-black/40 border border-white/10 outline-none focus:border-white"
                         />
 
-                        {error && <div className="text-red-500 text-sm">{error}</div>}
+                        {error && <div className="text-white text-sm">{error}</div>}
 
                         <button
                             onClick={handleSignup}
-                            className="w-full py-4 rounded-xl bg-purple-600 hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all duration-300"
+                            className="w-full py-4 rounded-xl bg-white text-black hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300"
                         >
                             Sign Up
                         </button>
@@ -112,7 +113,7 @@ function SignupPage() {
                         <span className="text-gray-400">Already have an account? </span>
                         <span 
                             onClick={() => navigate("/login")}
-                            className="text-purple-400 cursor-pointer hover:underline"
+                            className="text-gray-300 cursor-pointer hover:underline"
                         >
                             Log in
                         </span>

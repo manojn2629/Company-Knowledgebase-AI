@@ -67,14 +67,22 @@ function FloatingInput({ onSend }) {
 
         setUploading(true);
 
+        const isImage = file.type.startsWith("image/");
+        const endpoint = isImage ? "http://127.0.0.1:8000/vision" : "http://127.0.0.1:8000/upload";
+
         try {
-            const response = await fetch("http://127.0.0.1:8000/upload", {
+            const response = await fetch(endpoint, {
                 method: "POST",
                 body: formData,
             });
 
             const data = await response.json();
-            alert(data.message);
+            
+            if (isImage && data.status === "success") {
+                setInput(prev => prev + (prev ? " " : "") + `[Image Analysis: ${data.text}] `);
+            } else {
+                alert(data.message || (isImage ? "Vision analysis failed" : "Upload successful"));
+            }
         } catch (error) {
             console.error(error);
             alert("Upload failed");
@@ -84,7 +92,7 @@ function FloatingInput({ onSend }) {
     };
 
     return (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[750px] p-3 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 flex items-center gap-4 shadow-[0_0_40px_rgba(168,85,247,0.15)]">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[750px] p-3 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 flex items-center gap-4 shadow-[0_0_40px_rgba(255,255,255,0.3)]">
 
             {/* Upload Button */}
             <label className="cursor-pointer flex items-center justify-center w-12 h-12 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300">
@@ -94,7 +102,7 @@ function FloatingInput({ onSend }) {
                     accept=".pdf,.png,.jpg,.jpeg,.csv,.xlsx"
                     onChange={handleFileUpload}
                 />
-                <Paperclip className="w-5 h-5 text-purple-400" />
+                <Paperclip className="w-5 h-5 text-gray-300" />
             </label>
 
             {/* Mic Button */}
@@ -102,8 +110,8 @@ function FloatingInput({ onSend }) {
                 onClick={isRecording ? stopRecording : startRecording}
                 className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${
                     isRecording 
-                        ? "bg-red-500/20 border border-red-500/50 animate-pulse text-red-400" 
-                        : "bg-white/10 hover:bg-white/20 text-cyan-400"
+                        ? "bg-white/20 border border-white/50 animate-pulse text-red-400" 
+                        : "bg-white/10 hover:bg-white/20 text-gray-300"
                 }`}
             >
                 {isRecording ? <Square className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
@@ -127,14 +135,14 @@ function FloatingInput({ onSend }) {
             {/* Send Button */}
             <button
                 onClick={handleSend}
-                className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] transition-all duration-300"
+                className="px-6 py-3 rounded-xl bg-white text-black hover:bg-purple-700 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300"
             >
                 Send
             </button>
 
             {/* Upload Status */}
             {uploading && (
-                <span className="text-xs text-purple-400 animate-pulse">
+                <span className="text-xs text-gray-300 animate-pulse">
                     Uploading...
                 </span>
             )}
